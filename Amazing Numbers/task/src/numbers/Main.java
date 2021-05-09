@@ -3,6 +3,7 @@ package numbers;
 // A very simple solution using only the most basic Java constructs.
 
 import java.util.Scanner;
+import java.util.StringJoiner;
 
 public final class Main {
     private static final Scanner scanner = new Scanner(System.in);
@@ -22,9 +23,8 @@ public final class Main {
 
     private static void run() {
         while (true) {
-            System.out.println();
-            System.out.println("Enter a request:");
-            final var request = scanner.nextLine().toLowerCase().split(" ", 2);
+            final var request = readRequest();
+
             if ("0".equals(request[0])) {
                 return;
             }
@@ -44,7 +44,19 @@ public final class Main {
                 continue;
             }
             int count = Integer.parseInt(request[1]);
+            while (count-- > 0) {
+                naturalNumber.printLine();
+                naturalNumber.increment();
+            }
         }
+    }
+
+    private static String[] readRequest() {
+        System.out.println();
+        System.out.print("Enter a request: ");
+        final var input = scanner.nextLine().toLowerCase();
+        System.out.println();
+        return input.split(" ", 2);
     }
 
     private static void printHelp() {
@@ -60,7 +72,7 @@ public final class Main {
 
 class NaturalNumber {
     static final String[] PROPERTIES = new String[]{
-            "even", "odd", "buzz", "duck", "harshad", "palindromic"
+            "even", "odd", "buzz", "duck", "harshad", "palindromic", "armstrong"
     };
 
     private String digits;
@@ -80,12 +92,30 @@ class NaturalNumber {
         return "0".equals(value);
     }
 
+    static long pow(long n, int p) {
+        long result = 1;
+        for (int i = p; i > 0; --i) {
+            result *= n;
+        }
+        return result;
+    }
+
     void printCard() {
         System.out.printf("Properties of %,d%n", number);
         for (var property : PROPERTIES) {
             final var hasProperty = test(property);
             System.out.printf("%12s: %s%n", property, hasProperty);
         }
+    }
+
+    void printLine() {
+        final var properties = new StringJoiner(", ");
+        for (var property : PROPERTIES) {
+            if (test(property)) {
+                properties.add(property);
+            }
+        }
+        System.out.printf("%,12d is %s%n", number, properties);
     }
 
     private boolean test(final String property) {
@@ -97,12 +127,18 @@ class NaturalNumber {
             case "buzz":
                 return number % 7 == 0 || number % 10 == 7;
             case "duck":
-                return String.valueOf(number).indexOf('0') != -1;
+                return digits.indexOf('0') != -1;
             case "palindromic":
-                final var digits = String.valueOf(number);
                 return new StringBuilder(digits).reverse().toString().equals(digits);
             case "harshad":
                 return number % digitsSum() == 0;
+            case "armstrong":
+                int power = digits.length();
+                long sum = 0;
+                for (long i = number; i > 0; i /= 10) {
+                    sum += pow(i, power);
+                }
+                return number == sum;
         }
         return false;
     }
@@ -114,4 +150,10 @@ class NaturalNumber {
         }
         return sum;
     }
+
+    void increment() {
+        number++;
+        digits = String.valueOf(number);
+    }
+
 }
