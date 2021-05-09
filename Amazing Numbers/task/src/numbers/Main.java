@@ -84,7 +84,7 @@ public final class Main {
 
 class NaturalNumber {
     static final String[] PROPERTIES = new String[]{
-            "even", "odd", "buzz", "duck", "palindromic", "gapful", "spy", "square", "sunny"
+            "even", "odd", "buzz", "duck", "palindromic", "gapful", "spy", "square", "sunny", "jumping"
     };
 
     static {
@@ -166,6 +166,16 @@ class NaturalNumber {
                 return (long) Math.pow((long) Math.sqrt(number), 2) == number;
             case "sunny":
                 return new NaturalNumber(number + 1).test("square");
+            case "jumping":
+                for (long p = number % 10, rest = number / 10; rest > 0; rest /= 10) {
+                    long c = rest % 10;
+                    long d = p - c;
+                    if (d != 1 && d != -1) {
+                        return false;
+                    }
+                    p = c;
+                }
+                return true;
         }
         return false;
     }
