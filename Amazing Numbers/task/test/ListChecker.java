@@ -1,4 +1,3 @@
-import numbers.NumberProperty;
 import util.Checker;
 import util.UserProgram;
 

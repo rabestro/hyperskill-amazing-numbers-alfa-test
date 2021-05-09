@@ -8,12 +8,6 @@ import java.util.StringJoiner;
 public final class Main {
     private static final Scanner scanner = new Scanner(System.in);
 
-    private final long number;
-
-    Main(long number) {
-        this.number = number;
-    }
-
     public static void main(String[] args) {
         System.out.println("Welcome to Amazing Numbers!");
         printHelp();
@@ -72,7 +66,7 @@ public final class Main {
 
 class NaturalNumber {
     static final String[] PROPERTIES = new String[]{
-            "even", "odd", "buzz", "duck", "harshad", "palindromic", "armstrong"
+            "even", "odd", "buzz", "duck", "palindromic", "gapful"
     };
 
     private String digits;
@@ -90,14 +84,6 @@ class NaturalNumber {
             }
         }
         return "0".equals(value);
-    }
-
-    static long pow(long n, int p) {
-        long result = 1;
-        for (int i = p; i > 0; --i) {
-            result *= n;
-        }
-        return result;
     }
 
     void printCard() {
@@ -130,25 +116,11 @@ class NaturalNumber {
                 return digits.indexOf('0') != -1;
             case "palindromic":
                 return new StringBuilder(digits).reverse().toString().equals(digits);
-            case "harshad":
-                return number % digitsSum() == 0;
-            case "armstrong":
-                int power = digits.length();
-                long sum = 0;
-                for (long i = number; i > 0; i /= 10) {
-                    sum += pow(i, power);
-                }
-                return number == sum;
+            case "gapful":
+                final var divider = (digits.charAt(0) - '0') * 10 + number % 10;
+                return number > 100 && number % divider == 0;
         }
         return false;
-    }
-
-    private long digitsSum() {
-        long sum = 0;
-        for (long i = number; i > 0; i /= 10) {
-            sum += i % 10;
-        }
-        return sum;
     }
 
     void increment() {
