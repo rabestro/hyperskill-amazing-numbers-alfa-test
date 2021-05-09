@@ -17,7 +17,6 @@ public final class Main {
     }
 
     private static void run() {
-        askRequest:
         while (true) {
             final var request = readRequest();
 
