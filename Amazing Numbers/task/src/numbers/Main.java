@@ -6,9 +6,7 @@ import java.util.Scanner;
 
 public final class Main {
     private static final Scanner scanner = new Scanner(System.in);
-    private static final String[] PROPERTIES = new String[]{
-            "even", "odd", "buzz", "duck", "harshad", "palindromic"
-    };
+
     private final long number;
 
     Main(long number) {
@@ -26,16 +24,26 @@ public final class Main {
         while (true) {
             System.out.println();
             System.out.println("Enter a request:");
-            final var number = scanner.nextLong();
-            if (number == 0) {
+            final var request = scanner.nextLine().toLowerCase().split(" ", 2);
+            if ("0".equals(request[0])) {
                 return;
             }
-            if (number < 0) {
+            if (NaturalNumber.notNatural(request[0])) {
                 System.out.println("The first parameter should be a natural number or zero.");
                 continue;
             }
-            var naturalNumber = new Main(number);
-            naturalNumber.printCard();
+
+            final var naturalNumber = new NaturalNumber(request[0]);
+
+            if (request.length == 1) {
+                naturalNumber.printCard();
+                continue;
+            }
+            if (NaturalNumber.notNatural(request[1])) {
+                System.out.println("The second parameter should be a natural number.");
+                continue;
+            }
+            int count = Integer.parseInt(request[1]);
         }
     }
 
@@ -48,7 +56,31 @@ public final class Main {
         System.out.println("- enter 0 to exit.");
     }
 
-    private void printCard() {
+}
+
+class NaturalNumber {
+    static final String[] PROPERTIES = new String[]{
+            "even", "odd", "buzz", "duck", "harshad", "palindromic"
+    };
+
+    private String digits;
+    private long number;
+
+    NaturalNumber(String value) {
+        digits = value;
+        number = Long.parseLong(value);
+    }
+
+    static boolean notNatural(String value) {
+        for (var symbol : value.toCharArray()) {
+            if (!Character.isDigit(symbol)) {
+                return true;
+            }
+        }
+        return "0".equals(value);
+    }
+
+    void printCard() {
         System.out.printf("Properties of %,d%n", number);
         for (var property : PROPERTIES) {
             final var hasProperty = test(property);
