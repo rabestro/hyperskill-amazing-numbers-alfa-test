@@ -74,6 +74,7 @@ public final class Main {
         System.out.println("  * the first parameter represents a starting number;");
         System.out.println("  * the second parameter shows how many consecutive numbers are to be processed;");
         System.out.println("- two natural numbers and a property to search for;");
+        System.out.println("- two natural numbers and two properties to search for;");
         System.out.println("- separate the parameters with one space;");
         System.out.println("- enter 0 to exit.");
     }
@@ -82,7 +83,7 @@ public final class Main {
 
 class NaturalNumber {
     static final String[] PROPERTIES = new String[]{
-            "even", "odd", "buzz", "duck", "palindromic", "gapful", "spy"
+            "even", "odd", "buzz", "duck", "palindromic", "gapful", "spy", "square", "sunny"
     };
 
     static {
@@ -95,6 +96,11 @@ class NaturalNumber {
     NaturalNumber(String value) {
         digits = value;
         number = Long.parseLong(value);
+    }
+
+    NaturalNumber(long value) {
+        digits = String.valueOf(value);
+        number = value;
     }
 
     static boolean notNatural(String value) {
@@ -145,6 +151,10 @@ class NaturalNumber {
                 return number > 100 && number % divider == 0;
             case "spy":
                 return digitsSum() == digitsProduct();
+            case "square":
+                return (long) Math.pow((long) Math.sqrt(number), 2) == number;
+            case "sunny":
+                return new NaturalNumber(number + 1).test("square");
         }
         return false;
     }
