@@ -41,14 +41,16 @@ public final class Main {
             }
             int count = Integer.parseInt(request[1]);
             var query = request.length == 3 ? request[2].split(" ") : new String[0];
-            for (var property : query) {
-                if (NaturalNumber.isWrong(property)) {
-                    System.out.println("The property \"" + property + "\" is wrong.");
-                    System.out.println("Available properties: ");
-                    System.out.println(Arrays.toString(NaturalNumber.PROPERTIES));
-                    continue askRequest;
-                }
+            var wrong = NaturalNumber.getWrongProperties(query);
+
+            if (!wrong.isBlank()) {
+                System.out.printf(wrong.contains(", ") ?
+                        "The properties %s are wrong" : "The property %s is wrong", wrong);
+                System.out.println("Available properties: ");
+                System.out.println(Arrays.toString(NaturalNumber.PROPERTIES));
+                continue;
             }
+
             while (count > 0) {
                 if (naturalNumber.hasProperties(query)) {
                     naturalNumber.printLine();
@@ -114,6 +116,16 @@ class NaturalNumber {
 
     static boolean isWrong(String property) {
         return Arrays.binarySearch(PROPERTIES, property) < 0;
+    }
+
+    static String getWrongProperties(String[] query) {
+        var wrong = new StringJoiner(", ");
+        for (var property : query) {
+            if (NaturalNumber.isWrong(property)) {
+                wrong.add(property);
+            }
+        }
+        return wrong.toString();
     }
 
     void printCard() {
