@@ -39,10 +39,14 @@ public final class NumbersTest extends StageTest {
                             "In this stage, a user can enter two numbers and properties to search for. "
                                     + EXPLAIN))
                     .andThen(new TextChecker(
+                            "property preceded by minus",
+                            "In this stage, a user can a minus in front of the property. "
+                                    + EXPLAIN))
+                    .andThen(new TextChecker(
                             "enter 0 to exit",
                             "Display the instructions on how to exit"));
 
-    private static final Checker ASK_REQUEST = new RegexChecker(
+    private static final Checker ASK_REQUEST = new TextChecker(
             "enter a request",
             "The program should ask a user to enter a request."
     );
@@ -51,7 +55,7 @@ public final class NumbersTest extends StageTest {
             "The first parameter \"{0}\" is wrong. The program should print an error message."
     );
     private static final Checker ERROR_SECOND = new RegexChecker(
-            "The second parameter should be a natural number",
+            "The second (parameter|number) should be a natural number",
             "The second parameter \"{0}\" is wrong. The program should print an error message."
     );
     private static final Checker ERROR_PROPERTY = new RegexChecker(
@@ -106,7 +110,9 @@ public final class NumbersTest extends StageTest {
             // Stage #6 Two properties
             "5 1 odd even", "4 3 even odd", "32 2 sunny square", "3153 2 spy duck", "6 7 duck spy",
             // Stage #7 Several properties
-            "1 2 spy odd sunny even", "7 2 sunny even duck buzz square", "9 5 even spy buzz duck"
+            "1 2 spy odd sunny even", "7 2 sunny even duck buzz square", "9 5 even spy buzz duck",
+            // Stage #8 Properties preceded by minus
+            "6 6 -odd -even", "6 7 odd -odd", "8 1 -even even", "3 5 odd duck buzz -duck sunny"
     };
     // Stage #3
 
@@ -398,7 +404,10 @@ public final class NumbersTest extends StageTest {
                 "1 10 even sunny duck buzz gapful",
                 "100000 2 even spy buzz gapful",
                 "100 4 odd spy gapful",
-                "2000 4 even palindromic duck"
+                "2000 4 even palindromic duck",
+                // Stage #8
+                "1 15 odd spy -duck spy buzz",
+                "1 2 jumping happy -spy"
         )
                 .map(Request::new)
                 .toArray(Request[]::new);
@@ -419,6 +428,44 @@ public final class NumbersTest extends StageTest {
                 .execute(0)
                 .check(FINISHED)
                 .result();
+    }
+
+    // Stage #8 If a property is preceded by a minus, this property should not be present in a number
+
+    @DynamicTest(data = "mutuallyExclusive", order = 80)
+    CheckResult mutuallyExclusivePropertiesTest(String mutuallyExclusive) {
+        return program
+                .start()
+                .check(WELCOME)
+                .check(HELP)
+                .check(ASK_REQUEST)
+                .execute(mutuallyExclusive)
+                .check(MUTUALLY_EXCLUSIVE)
+                .check(RUNNING)
+                .check(ASK_REQUEST)
+                .execute(0)
+                .check(FINISHED)
+                .result();
+    }
+
+    // The test generates and checks request "1 15 -PROPERTY" for all properties
+
+    @DynamicTest(order = 85)
+    CheckResult allMinusPropertiesTest() {
+        program.start().check(WELCOME).check(HELP);
+
+        Arrays.stream(NumberProperty.values())
+                .map(Enum::name)
+                .map("1 15 -"::concat)
+                .map(Request::new)
+                .peek(program.check(ASK_REQUEST)::execute)
+                .forEach(request -> program
+                        .check(request.getLinesChecker())
+                        .check(new ListChecker(request))
+                        .check(RUNNING)
+                );
+
+        return program.execute(0).check(FINISHED).result();
     }
 
 }
