@@ -2,6 +2,7 @@ package numbers;
 
 // A very simple solution using only the most basic Java constructs.
 
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.StringJoiner;
 
@@ -16,6 +17,7 @@ public final class Main {
     }
 
     private static void run() {
+        askRequest:
         while (true) {
             final var request = readRequest();
 
@@ -38,8 +40,20 @@ public final class Main {
                 continue;
             }
             int count = Integer.parseInt(request[1]);
-            while (count-- > 0) {
-                naturalNumber.printLine();
+            var query = request.length == 3 ? request[2].split(" ") : new String[0];
+            for (var property : query) {
+                if (NaturalNumber.isWrong(property)) {
+                    System.out.println("The property \"" + property + "\" is wrong.");
+                    System.out.println("Available properties: ");
+                    System.out.println(Arrays.toString(NaturalNumber.PROPERTIES));
+                    continue askRequest;
+                }
+            }
+            while (count > 0) {
+                if (naturalNumber.hasProperties(query)) {
+                    naturalNumber.printLine();
+                    count--;
+                }
                 naturalNumber.increment();
             }
         }
@@ -50,7 +64,7 @@ public final class Main {
         System.out.print("Enter a request: ");
         final var input = scanner.nextLine().toLowerCase();
         System.out.println();
-        return input.split(" ", 2);
+        return input.split(" ", 3);
     }
 
     private static void printHelp() {
@@ -59,6 +73,8 @@ public final class Main {
         System.out.println("- enter two natural numbers to obtain the properties of the list:");
         System.out.println("  * the first parameter represents a starting number;");
         System.out.println("  * the second parameter shows how many consecutive numbers are to be processed;");
+        System.out.println("- two natural numbers and a property to search for;");
+        System.out.println("- separate the parameters with one space;");
         System.out.println("- enter 0 to exit.");
     }
 
@@ -66,8 +82,12 @@ public final class Main {
 
 class NaturalNumber {
     static final String[] PROPERTIES = new String[]{
-            "even", "odd", "buzz", "duck", "palindromic", "gapful"
+            "even", "odd", "buzz", "duck", "palindromic", "gapful", "spy"
     };
+
+    static {
+        Arrays.sort(PROPERTIES);
+    }
 
     private String digits;
     private long number;
@@ -84,6 +104,10 @@ class NaturalNumber {
             }
         }
         return "0".equals(value);
+    }
+
+    static boolean isWrong(String property) {
+        return Arrays.binarySearch(PROPERTIES, property) < 0;
     }
 
     void printCard() {
@@ -119,6 +143,8 @@ class NaturalNumber {
             case "gapful":
                 final var divider = (digits.charAt(0) - '0') * 10 + number % 10;
                 return number > 100 && number % divider == 0;
+            case "spy":
+                return digitsSum() == digitsProduct();
         }
         return false;
     }
@@ -128,4 +154,28 @@ class NaturalNumber {
         digits = String.valueOf(number);
     }
 
+    boolean hasProperties(String[] query) {
+        for (var property : query) {
+            if (!test(property)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private long digitsSum() {
+        long sum = 0;
+        for (long i = number; i > 0; i /= 10) {
+            sum += i % 10;
+        }
+        return sum;
+    }
+
+    private long digitsProduct() {
+        long product = 1;
+        for (long i = number; i > 0; i /= 10) {
+            product *= i % 10;
+        }
+        return product;
+    }
 }
