@@ -3,6 +3,7 @@ package numbers;
 // A very simple solution using only the most basic Java constructs.
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Scanner;
 import java.util.StringJoiner;
 
@@ -17,7 +18,6 @@ public final class Main {
     }
 
     private static void run() {
-        askRequest:
         while (true) {
             final var request = readRequest();
 
@@ -41,14 +41,16 @@ public final class Main {
             }
             int count = Integer.parseInt(request[1]);
             var query = request.length == 3 ? request[2].split(" ") : new String[0];
-            for (var property : query) {
-                if (NaturalNumber.isWrong(property)) {
-                    System.out.println("The property \"" + property + "\" is wrong.");
-                    System.out.println("Available properties: ");
-                    System.out.println(Arrays.toString(NaturalNumber.PROPERTIES));
-                    continue askRequest;
-                }
+            var wrong = NaturalNumber.getWrongProperties(query);
+
+            if (!wrong.isBlank()) {
+                System.out.printf(wrong.contains(", ") ?
+                        "The properties %s are wrong" : "The property %s is wrong", wrong);
+                System.out.println("Available properties: ");
+                System.out.println(Arrays.toString(NaturalNumber.PROPERTIES));
+                continue;
             }
+
             while (count > 0) {
                 if (naturalNumber.hasProperties(query)) {
                     naturalNumber.printLine();
@@ -74,7 +76,8 @@ public final class Main {
         System.out.println("  * the first parameter represents a starting number;");
         System.out.println("  * the second parameter shows how many consecutive numbers are to be processed;");
         System.out.println("- two natural numbers and a property to search for;");
-        System.out.println("- two natural numbers and two properties to search for;");
+        System.out.println("- two natural numbers and properties to search for;");
+        System.out.println("- a property preceded by minus must not be present in numbers;");
         System.out.println("- separate the parameters with one space;");
         System.out.println("- enter 0 to exit.");
     }
@@ -82,8 +85,12 @@ public final class Main {
 }
 
 class NaturalNumber {
+    static final String[][] MUTUALLY_EXCLUSIVE = new String[][]{
+            {"even", "odd"}, {"spy", "duck"}, {"sunny", "square"}, {"happy", "sad"}
+    };
     static final String[] PROPERTIES = new String[]{
-            "even", "odd", "buzz", "duck", "palindromic", "gapful", "spy", "square", "sunny"
+            "even", "odd", "buzz", "duck", "palindromic", "gapful",
+            "spy", "square", "sunny", "jumping", "happy", "sad"
     };
 
     static {
@@ -114,6 +121,17 @@ class NaturalNumber {
 
     static boolean isWrong(String property) {
         return Arrays.binarySearch(PROPERTIES, property) < 0;
+    }
+
+    static String getWrongProperties(String[] query) {
+        var wrong = new StringJoiner(", ");
+        for (var property : query) {
+            var name = property.charAt(0) == '-' ? property.substring(1) : property;
+            if (NaturalNumber.isWrong(name)) {
+                wrong.add(property);
+            }
+        }
+        return wrong.toString();
     }
 
     void printCard() {
@@ -155,6 +173,20 @@ class NaturalNumber {
                 return (long) Math.pow((long) Math.sqrt(number), 2) == number;
             case "sunny":
                 return new NaturalNumber(number + 1).test("square");
+            case "jumping":
+                for (long p = number % 10, rest = number / 10; rest > 0; rest /= 10) {
+                    long c = rest % 10;
+                    long d = p - c;
+                    if (d != 1 && d != -1) {
+                        return false;
+                    }
+                    p = c;
+                }
+                return true;
+            case "happy":
+                return isHappy();
+            case "sad":
+                return !isHappy();
         }
         return false;
     }
@@ -166,7 +198,8 @@ class NaturalNumber {
 
     boolean hasProperties(String[] query) {
         for (var property : query) {
-            if (!test(property)) {
+            var isNegative = property.charAt(0) == '-';
+            if (isNegative ? test(property.substring(1)) : !test(property)) {
                 return false;
             }
         }
@@ -187,5 +220,25 @@ class NaturalNumber {
             product *= i % 10;
         }
         return product;
+    }
+
+    private boolean isHappy() {
+        final var sequence = new HashSet<Long>();
+        for (long i = number; !sequence.contains(i); i = happyNext(i)) {
+            if (i == 1) {
+                return true;
+            }
+            sequence.add(i);
+        }
+        return false;
+    }
+
+    private long happyNext(long number) {
+        long result = 0;
+        for (long i = number; i > 0; i /= 10) {
+            int digit = (int) (i % 10);
+            result += digit * digit;
+        }
+        return result;
     }
 }
