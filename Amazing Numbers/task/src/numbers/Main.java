@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.StringJoiner;
 
+import static java.util.Arrays.binarySearch;
+
 public final class Main {
     private static final Scanner scanner = new Scanner(System.in);
 
@@ -40,14 +42,22 @@ public final class Main {
                 continue;
             }
             int count = Integer.parseInt(request[1]);
-            var query = request.length == 3 ? request[2].split(" ") : new String[0];
-            var wrong = NaturalNumber.getWrongProperties(query);
-
+            final var query = request.length == 3 ? request[2].split(" ") : new String[0];
+            final var wrong = NaturalNumber.getWrongProperties(query);
             if (!wrong.isBlank()) {
                 System.out.printf(wrong.contains(", ") ?
                         "The properties %s are wrong" : "The property %s is wrong", wrong);
                 System.out.println("Available properties: ");
                 System.out.println(Arrays.toString(NaturalNumber.PROPERTIES));
+                continue;
+            }
+
+            final var mutuallyExclusivePairs = NaturalNumber.getMutuallyExclusive(query);
+
+            if (!mutuallyExclusivePairs.isBlank()) {
+                System.out.print("The request contains mutually exclusive properties: ");
+                System.out.println(mutuallyExclusivePairs);
+                System.out.println("There are no numbers with these properties.");
                 continue;
             }
 
@@ -85,32 +95,41 @@ public final class Main {
 }
 
 class NaturalNumber {
-    static final String[][] MUTUALLY_EXCLUSIVE = new String[][]{
-            {"even", "odd"}, {"spy", "duck"}, {"sunny", "square"}, {"happy", "sad"}
-    };
     static final String[] PROPERTIES = new String[]{
             "even", "odd", "buzz", "duck", "palindromic", "gapful",
             "spy", "square", "sunny", "jumping", "happy", "sad"
     };
+    private static final String[][] EXCLUSIVE = new String[][]{
+            {"even", "odd"}, {"spy", "duck"}, {"sunny", "square"}, {"happy", "sad"},
+            {"-even", "-odd"}, {"-happy", "-sad"}
+    };
+    public static final String[][] MUTUALLY_EXCLUSIVE = new String[EXCLUSIVE.length + PROPERTIES.length][];
 
     static {
         Arrays.sort(PROPERTIES);
+        int index = 0;
+        for (var pair : EXCLUSIVE) {
+            MUTUALLY_EXCLUSIVE[index++] = pair;
+        }
+        for (var property : PROPERTIES) {
+            MUTUALLY_EXCLUSIVE[index++] = new String[]{property, "-" + property};
+        }
     }
 
     private String digits;
     private long number;
 
-    NaturalNumber(String value) {
+    NaturalNumber(final String value) {
         digits = value;
         number = Long.parseLong(value);
     }
 
-    NaturalNumber(long value) {
+    NaturalNumber(final long value) {
         digits = String.valueOf(value);
         number = value;
     }
 
-    static boolean notNatural(String value) {
+    static boolean notNatural(final String value) {
         for (var symbol : value.toCharArray()) {
             if (!Character.isDigit(symbol)) {
                 return true;
@@ -119,11 +138,11 @@ class NaturalNumber {
         return "0".equals(value);
     }
 
-    static boolean isWrong(String property) {
-        return Arrays.binarySearch(PROPERTIES, property) < 0;
+    static boolean isWrong(final String property) {
+        return binarySearch(PROPERTIES, property) < 0;
     }
 
-    static String getWrongProperties(String[] query) {
+    static String getWrongProperties(final String[] query) {
         var wrong = new StringJoiner(", ");
         for (var property : query) {
             var name = property.charAt(0) == '-' ? property.substring(1) : property;
@@ -132,6 +151,18 @@ class NaturalNumber {
             }
         }
         return wrong.toString();
+    }
+
+    static String getMutuallyExclusive(final String[] query) {
+        Arrays.sort(query);
+        var me = new StringJoiner(", ");
+        for (var pair : MUTUALLY_EXCLUSIVE) {
+            var containsPair = binarySearch(query, pair[0]) >= 0 && binarySearch(query, pair[1]) >= 0;
+            if (containsPair) {
+                me.add(pair[0] + " and " + pair[1]);
+            }
+        }
+        return me.toString();
     }
 
     void printCard() {
